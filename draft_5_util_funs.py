@@ -62,6 +62,7 @@ class QEMC:
 
         self.cost_values = []
         self.cut_values = []
+        self.best_cut_values = []
 
         optimizer_result = minimize(
             fun=self.compute_cost_single_iteration,
@@ -87,6 +88,7 @@ class QEMC:
             optimizer_result=dict(optimizer_result),
             cost_values=self.cost_values,
             cut_values=self.cut_values,
+            best_cut_values=self.best_cut_values,
             # final_probability_distribution=self.probability_distribution
         )
 
@@ -120,18 +122,25 @@ class QEMC:
         )
 
         self.cost_values.append(cost_value)
-        self.cut_values.append(
-            compute_cut(
-                self.graph,
-                partition=obtain_partition_from_distribution(
-                    probability_distribution=self.probability_distribution,
-                    num_nodes=self.num_nodes,
-                    num_blue_nodes=self.num_blue_nodes,
-                    classification_threshold=None
-                ),
 
-            )
+        cut_value = compute_cut(
+            self.graph,
+            partition=obtain_partition_from_distribution(
+                probability_distribution=self.probability_distribution,
+                num_nodes=self.num_nodes,
+                num_blue_nodes=self.num_blue_nodes,
+                classification_threshold=None
+            ),
         )
+
+        self.cut_values.append(cut_value)
+
+        if len(self.best_cut_values) == 0:
+            self.best_cut_values.append(cut_value)
+        elif self.best_cut_values[-1] > cut_value:
+            self.best_cut_values.append(self.best_cut_values[-1])
+        else:
+            self.best_cut_values.append(cut_value)
 
         return cost_value
 
@@ -298,12 +307,6 @@ def obtain_partition_from_distribution(
         
         partition[int(blue_basis_state, 2)] = "1"
         blue_nodes_counter += 1
-
-    print()
-    print("######################")
-    print(partition)
-    print("######################")
-    print()
 
     return "".join(list(partition))
 

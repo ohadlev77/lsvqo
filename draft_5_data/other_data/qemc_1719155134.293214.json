@@ -1,0 +1,6 @@
+{
+    "metadata": {
+        "optimization_fun": "qemc_c2",
+        "num_nodes": 16,
+        "num_blue_nodes": 8,
+        "edges": 

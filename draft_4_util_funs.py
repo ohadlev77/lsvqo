@@ -56,7 +56,10 @@ def brute_force_maxcut(
     return {"best_partition": best_partition, "maxcut": maxcut}
         
         
-def compute_cut(graph: nx.Graph, partition: str) -> int:
+def compute_cut(
+    graph: nx.Graph,
+    partition: str
+) -> int:
     
     cut = 0
     for node_i, node_j in graph.edges():

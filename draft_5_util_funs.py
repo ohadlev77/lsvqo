@@ -36,13 +36,22 @@ class QEMC:
 
         self.num_qubits = math.ceil(np.log2(self.num_nodes))
 
+        initial_state = QuantumCircuit(self.num_qubits)
+        initial_state.h(initial_state.qubits) 
+
         if ansatz is None:
-            ansatz = RealAmplitudes(num_qubits=self.num_qubits, entanglement="circular", reps=5).decompose()
+            ansatz = RealAmplitudes(
+                num_qubits=self.num_qubits,
+                entanglement="circular",
+                reps=5,
+                initial_state=initial_state
+            ).decompose()
 
             if not self.quantum_backend.name == "statevector_simulator":
                 ansatz.measure_all()
 
         self.ansatz = ansatz
+
         return ansatz
 
 
@@ -57,8 +66,9 @@ class QEMC:
 
         x0_random_flag = False
         if x0 is None:
-            x0 = np.random.uniform(0, 2 * np.pi, size=self.ansatz.num_parameters)
-            x0_random_flag = True
+            # x0 = np.random.uniform(0, 2 * np.pi, size=self.ansatz.num_parameters)
+            x0 = np.array([0.0 for _ in range(self.ansatz.num_parameters)])
+            x0_random_flag = False
 
         self.cost_values = []
         self.cut_values = []
@@ -129,7 +139,9 @@ class QEMC:
                 probability_distribution=self.probability_distribution,
                 num_nodes=self.num_nodes,
                 num_blue_nodes=self.num_blue_nodes,
-                classification_threshold=None
+                classification_threshold=None,
+                take_b_highest_degree_nodes=True,
+                graph=self.graph
             ),
         )
 
@@ -283,10 +295,21 @@ def obtain_partition_from_distribution(
     probability_distribution: dict[str, float],
     num_nodes: int,
     num_blue_nodes: int,
-    classification_threshold: Optional[float] = None
+    classification_threshold: Optional[float] = None,
+    take_b_highest_degree_nodes: bool = False,
+    graph: Optional[nx.Graph] = None
 ) -> str:
 
     partition = ["0" for _ in range(num_nodes)]
+
+    if take_b_highest_degree_nodes:
+        sorted_nodes_by_degree = sorted(
+            graph.degree,
+            key=lambda item: item[1],
+            reverse=True
+        )
+
+        critical_degree = sorted_nodes_by_degree[num_blue_nodes - 1][1]
 
     sorted_probability_distribution = sorted(
         probability_distribution.items(),
@@ -299,6 +322,10 @@ def obtain_partition_from_distribution(
 
         if classification_threshold is None:
             if blue_nodes_counter >= num_blue_nodes:
+                break
+
+        elif take_b_highest_degree_nodes:
+            if graph.degree[int(blue_basis_state, 2)] < critical_degree:
                 break
         
         else:

@@ -130,7 +130,7 @@ if __name__ == "__main__":
     num_shots = [25, 64, 121, 512]
     cost_functions = {"c1": qemc_cost_fun}
     data_export_path = Path(
-        "/home/ohadlev77/personal/research/large_scale_variational_quantum_optimization/draft_8_data"
+        "/home/ohadlev77/personal/research/large_scale_variational_quantum_optimization/draft_8_data_start_from_all_zeros_param_vec_with_initial_h_layer"
     )
 
     style_map = {
@@ -138,7 +138,8 @@ if __name__ == "__main__":
             25: "red",
             64: "green",
             121: "blue",
-            512: "purple",
+            512: "purple"
+
         },
         "type": {
             "random": "--",
